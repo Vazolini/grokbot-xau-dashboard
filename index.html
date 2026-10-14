@@ -34,6 +34,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}th{color:var(--orange2)
 .btn{background:#000;color:var(--orange);border:1px solid var(--orange);border-radius:4px;font:inherit;font-size:10px;padding:2px 8px;margin-left:6px;cursor:pointer}.btn:hover{background:var(--orange);color:#000}
 small{color:var(--mut)}.past{opacity:.45}.now{background:rgba(255,59,92,.15)}::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:#090502}::-webkit-scrollbar-thumb{background:#5a2a00;border-radius:4px}
 .why{font-size:10px;color:var(--mut);max-width:340px}
+.tfbtn{min-width:56px;min-height:40px;font-size:14px;touch-action:manipulation;cursor:pointer}.tfbtn.on{background:var(--orange);color:#000}
 </style></head><body>
 <div class="banner">⚠ MODO PAPER TRADING — CAPITAL VIRTUAL — NENHUMA ORDEM REAL ⚠</div>
 <header><div class="logo">GROKBOT <span>+</span> JEV — <em>XAU/USD</em></div>
@@ -49,7 +50,7 @@ small{color:var(--mut)}.past{opacity:.45}.now{background:rgba(255,59,92,.15)}::-
 <div class="stat"><div class="l">R MÉDIO</div><div class="v" id="ar">—</div></div></div>
 <div style="margin-top:8px;font-size:11px;color:var(--mut)" id="indl"></div></section>
 <section class="card s12"><h2>Agentes</h2><div class="agents" id="agents"></div></section>
-<section class="card s8"><h2><span id="ctitle">XAU/USD</span> 15m — EMA20 / EMA50 + trades</h2><div id="chart"></div><small><span id="srcl">—</span> Horas: Lisboa.<span id="lastbar"></span></small></section>
+<section class="card s8"><h2><span id="ctitle">XAU/USD</span> <span id="tfl">15m</span> — EMA20 / EMA50 + trades</h2><div id="tfb" style="display:flex;gap:8px;margin:0 0 8px"><button class="btn tfbtn" data-tf="5m">5m</button><button class="btn tfbtn" data-tf="15m">15m</button><button class="btn tfbtn" data-tf="1h">1h</button></div><div id="chart"></div><small><span id="srcl">—</span> Horas: Lisboa.<span id="lastbar"></span></small></section>
 <section class="card s4"><h2>Calendário Macro (USD)</h2><div class="tw" style="max-height:440px"><table><thead><tr><th>HORA (LISBOA)</th><th>IMP.</th><th>EVENTO</th><th>PREV.</th></tr></thead><tbody id="cal"></tbody></table></div><small>Fonte: ForexFactory. Sem entradas ±30 min de eventos USD de alto impacto.</small></section>
 <section class="card s8"><h2>Curva de Capital (Virtual)</h2><div id="eq"></div></section>
 <section class="card s4"><h2>Estatísticas por Setup</h2><table><thead><tr><th>SETUP</th><th>TRADES</th><th>ARM/CONF/EXP</th><th>ACERTO</th><th>R MÉDIO</th><th>P&amp;L</th></tr></thead><tbody id="st"></tbody></table><div id="sig" style="margin-top:10px;font-size:11px"></div></section>
@@ -100,7 +101,8 @@ const ch=LW.createChart($('chart'),{...base,autoSize:true});
 const cs=ch.addCandlestickSeries({upColor:'#00ffa3',downColor:'#ff3b5c',borderVisible:false,wickUpColor:'#00ffa3',wickDownColor:'#ff3b5c'});
 const s20=ch.addLineSeries({color:'#ffd23f',lineWidth:1,priceLineVisible:false,lastValueVisible:false,title:'EMA20'}),s50=ch.addLineSeries({color:'#ff4d00',lineWidth:2,priceLineVisible:false,lastValueVisible:false,title:'EMA50'});
 const ec=LW.createChart($('eq'),{...base,autoSize:true});const es=ec.addAreaSeries({lineColor:'#ff7a00',topColor:'rgba(255,122,0,.4)',bottomColor:'rgba(255,122,0,0)',lineWidth:2});
-let plines=[],fitted=false;
+let plines=[],fitted=false;let TF=(()=>{try{const v=localStorage.getItem('xauTF');return ['5m','15m','1h'].includes(v)?v:'15m';}catch(e){return '15m';}})();
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.tfbtn');if(!b)return;TF=b.dataset.tf;try{localStorage.setItem('xauTF',TF);}catch(_){}fitted=false;if(S)render();});
 function render(){
  const cb=$('cb');cb.style.display=S.cb?'block':'none';cb.textContent='⛔ CIRCUIT BREAKER ATIVO — '+(S.cbReason||'');
  const m=S.market||{};const mk=$('mk');mk.className='mk '+(m.open&&!m.dataStale?'open':'closed');mk.textContent=m.open?(m.dataStale?'DADOS ATRASADOS':'MERCADO ABERTO'):'MERCADO FECHADO — '+(m.reason||'');
@@ -110,8 +112,8 @@ function render(){
  const ar=C.length?C.reduce((a,t)=>a+t.r,0)/C.length:null;$('ar').textContent=ar==null?'—':sg(ar)+'R';$('ar').className='v '+(ar==null?'':cl(ar));
  const I=S.ind||{};$('indl').innerHTML=`Tendência 1h: <b>${I.trend1h||'—'}</b> · 15m: <b>${I.trend15||'—'}</b> · RSI14: ${fmt(I.rsi,1)} · ATR14 (15m): ${fmt(I.atr)} · EMA20 ${fmt(I.ema20)} · EMA50 ${fmt(I.ema50)} · Range Ásia ${I.asia?I.asia.day+' ['+I.asia.status+']':''}: ${I.asia&&I.asia.low!=null?fmt(I.asia.low)+' – '+fmt(I.asia.high):'—'}${I.asia&&I.asia.status!=='COMPLETO'&&I.asia.prevLow!=null?' (anterior '+I.asia.prevDay+': '+fmt(I.asia.prevLow)+' – '+fmt(I.asia.prevHigh)+')':''} · Bloqueio: <b style="color:${S.block?'var(--r)':'var(--g)'}">${esc(S.block||'nenhum')}</b>`;
  AG.forEach(n=>{const a=S.agents[n];if(!a)return;const el=$('ag-'+n);const la=el.querySelector('.la');const txt=a.last+' · há '+ago(a.at);if(la.dataset.m!==a.last){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),900);}la.dataset.m=a.last;la.textContent=txt;});
- const cd=S.candles||[];cs.setData(cd.map(b=>({time:b.t,open:b.o,high:b.h,low:b.l,close:b.c})));s20.setData(cd.map(b=>({time:b.t,value:b.e20})));s50.setData(cd.map(b=>({time:b.t,value:b.e50})));
- const t0=cd.length?cd[0].t:0,snap=t=>Math.floor(t/900)*900;const mks=[];
+ const TFS={'5m':300,'15m':900,'1h':3600},stp=TFS[TF];const cd=TF==='15m'?(S.candles||[]):((S.candlesTF||{})[TF]||[]).map(r=>({t:r[0],o:r[1],h:r[2],l:r[3],c:r[4],e20:r[5],e50:r[6]}));$('tfl').textContent=TF;document.querySelectorAll('.tfbtn').forEach(b=>b.classList.toggle('on',b.dataset.tf===TF));cs.setData(cd.map(b=>({time:b.t,open:b.o,high:b.h,low:b.l,close:b.c})));s20.setData(cd.map(b=>({time:b.t,value:b.e20})));s50.setData(cd.map(b=>({time:b.t,value:b.e50})));
+ const t0=cd.length?cd[0].t:0,snap=t=>Math.floor(t/stp)*stp;const mks=[];
  [...S.open,...C].forEach(t=>{const L=t.side==='LONG';const ot=snap(t.openedAt/1000);if(ot>=t0)mks.push({time:ot,position:L?'belowBar':'aboveBar',color:L?'#00ffa3':'#ff3b5c',shape:L?'arrowUp':'arrowDown',text:'#'+t.id+' '+t.setup});
   if(t.closedAt){const ct=snap(t.closedAt/1000);if(ct>=t0)mks.push({time:ct,position:L?'aboveBar':'belowBar',color:t.pnl>=0?'#ffd23f':'#ff4d00',shape:'circle',text:'#'+t.id+' '+sg(t.r)+'R'});}});
  mks.sort((a,b)=>a.time-b.time);cs.setMarkers(mks);
