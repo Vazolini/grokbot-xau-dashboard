@@ -75,9 +75,14 @@ small{color:var(--mut)}.past{opacity:.45}.now{background:rgba(255,59,92,.15)}::-
 </section></div>
 <section id="hero"><canvas id="oc" aria-label="Escritório animado do desk XAU"></canvas></section>
 <div id="right">
-<section class="card tabs"><div class="tabbar"><button data-p="pcal" class="act">CALENDÁRIO</button><button data-p="plog">LOG</button><button data-p="pst">SETUPS</button></div>
+<section class="card tabs"><div class="tabbar"><button data-p="pcal" class="act">CALENDÁRIO</button><button data-p="plog">LOG</button><button data-p="pst">SETUPS</button><button data-p="pdemo" id="dtab">DEMO MT5</button></div>
 <div class="pane act" id="pcal"><h2 class="t">Calendário Macro (USD)</h2><div class="tw"><table><thead><tr><th>HORA (LISBOA)</th><th>IMP.</th><th>EVENTO</th><th>PREV.</th></tr></thead><tbody id="cal"></tbody></table></div><small style="flex:none">Fonte: ForexFactory. Sem entradas ±30 min de eventos USD de alto impacto.</small></div>
 <div class="pane" id="plog"><h2 class="t">Log em Tempo Real</h2><div id="log"></div></div>
+<div class="pane" id="pdemo"><h2 class="t">Demo MT5 · Pepperstone <small id="dstat" style="font-size:10px"></small></h2>
+<div class="stats" style="flex:none;margin-bottom:6px"><div class="stat"><div class="l">SALDO</div><div class="v" id="dbal">—</div></div><div class="stat"><div class="l">EQUITY</div><div class="v" id="deq" style="color:var(--orange)">—</div></div><div class="stat"><div class="l">MIRROR</div><div class="v" id="den">—</div></div><div class="stat"><div class="l">KILL-SWITCH</div><div class="v" id="dks">—</div></div></div>
+<div class="tw" style="flex:none;max-height:28%"><table><thead><tr><th>TICKET</th><th>LADO</th><th>LOTES</th><th>ENTRADA</th><th>SL</th><th>TP</th><th>P&amp;L</th></tr></thead><tbody id="dpos"></tbody></table></div>
+<div class="tw"><table><thead><tr><th>HORA</th><th>POS.</th><th>LADO</th><th>IN/OUT</th><th>LOTES</th><th>PREÇO</th><th>P&amp;L</th><th>COM.</th></tr></thead><tbody id="ddeals"></tbody></table></div>
+<small style="flex:none">Conta DEMO (sem dinheiro real). Publicado pelo PC a cada ~60s.</small></div>
 <div class="pane" id="pst"><h2 class="t">Estatísticas por Setup</h2><table><thead><tr><th>SETUP</th><th>TRADES</th><th>ARM/CONF/EXP</th><th>ACERTO</th><th>R MÉDIO</th><th>P&amp;L</th></tr></thead><tbody id="st"></tbody></table><div id="sig" style="margin-top:10px;font-size:11px"></div></div>
 </section></div>
 <section class="card" id="chC"><h2><span id="ctitle">XAU/USD</span> <span id="tfl">15m</span> — EMA20/50 + trades<span id="tfb"><button class="btn tfbtn" data-tf="5m">5m</button><button class="btn tfbtn" data-tf="15m">15m</button><button class="btn tfbtn" data-tf="1h">1h</button></span></h2><div id="chart"></div><small class="cline"><span id="srcl">—</span> Horas: Lisboa.<span id="lastbar"></span></small></section>
@@ -324,4 +329,19 @@ $('expC').onclick=()=>{if(!S)return;const h=['id','setup','lado','abertura','fec
  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';dl('xau-trades.csv',[h.join(';'),...S.closed.map(t=>[t.id,t.setup,t.side,new Date(t.openedAt).toISOString(),new Date(t.closedAt).toISOString(),t.entry,t.exit,t.sl0,t.tp,t.qty,t.r,t.pnl,t.reason,t.why].map(q).join(';'))].join('\n'),'text/csv');};
 load();setInterval(load,POLL_MS);setInterval(status,1000);
 })();
-</script></body></html>
+</script>
+<script>(()=>{const U='https://raw.githubusercontent.com/Vazolini/grokbot-xau-dashboard/demo/demo.json';
+const F=(n,d=2)=>n==null||isNaN(n)?'—':(+n).toLocaleString('pt-PT',{minimumFractionDigits:d,maximumFractionDigits:d});const C=n=>n>=0?'pos':'neg';
+const T=t=>t?new Date(t).toLocaleString('pt-PT',{timeZone:'Europe/Lisbon',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—';
+const E=x=>String(x??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));const $=i=>document.getElementById(i);
+async function L(){try{const r=await fetch(U+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;const d=await r.json();
+const age=Math.round((Date.now()-Date.parse(d.updatedAt))/1000),stale=age>300;
+$('dstat').innerHTML=`<span class="${stale?'neg':'pos'}">${d.demo?'DEMO':'⚠ NÃO-DEMO'} · ${E(d.server)} · há ${age}s</span>`;
+$('dbal').textContent=F(d.balance);$('deq').textContent=F(d.equity);
+$('den').innerHTML=d.mirrorEnabled?'<span class="pos">ON</span>':'<span class="neg">OFF</span>';
+const k=d.killSwitch||{};$('dks').innerHTML=k.tripped?`<span class="neg" title="${E(k.reason)}">DISPARADO</span>`:`<span class="pos">OK</span> <small>${F(k.day_R)}R</small>`;
+$('dpos').innerHTML=(d.positions||[]).map(p=>`<tr><td>${E(p.ticket)}</td><td>${E(p.side)}</td><td>${F(p.lots)}</td><td>${F(p.entry)}</td><td>${F(p.sl)}</td><td>${F(p.tp)}</td><td class="${C(p.profit)}">${F(p.profit)}</td></tr>`).join('')||'<tr><td colspan="7" style="color:var(--mut)">Sem posições</td></tr>';
+$('ddeals').innerHTML=(d.deals||[]).slice().reverse().map(x=>`<tr><td>${T(x.time)}</td><td>${E(x.position)}</td><td>${E(x.side)}</td><td>${E(x.entry)}</td><td>${F(x.lots)}</td><td>${F(x.price)}</td><td class="${C(x.profit)}">${F(x.profit)}</td><td>${F(x.commission)}</td></tr>`).join('')||'<tr><td colspan="8" style="color:var(--mut)">Sem deals</td></tr>';
+$('dtab').textContent='DEMO MT5 '+F(d.equity,0);}catch(e){$('dstat').innerHTML='<span class="neg">sem dados demo</span>';}}
+L();setInterval(L,60000);})();</script>
+</body></html>
