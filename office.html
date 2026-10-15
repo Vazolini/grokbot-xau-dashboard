@@ -1,0 +1,125 @@
+<!doctype html><html lang="pt-PT"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Escritório — XAU/USD Desk (paper)</title>
+<style>
+html,body{margin:0;background:#0b0e14;color:#e6e6e6;font:13px/1.3 ui-monospace,Menlo,Consolas,monospace;height:100%}
+#top{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;padding:8px 10px;background:#121722;border-bottom:2px solid #232b3b}
+#top b{color:#ffd166}#top a{color:#8ecae6;margin-left:auto}
+.pill{padding:2px 8px;border-radius:9px;background:#1f2a3a}
+.ok{background:#1d4d2e}.warn{background:#5a4512}.bad{background:#6b1e1e}
+#wrap{display:flex;justify-content:center;padding:8px}
+canvas{image-rendering:pixelated;image-rendering:crisp-edges;width:100%;max-width:960px;border:2px solid #232b3b;background:#000;touch-action:manipulation}
+#foot{text-align:center;color:#7b8496;font-size:11px;padding:4px 10px 12px}
+</style></head><body>
+<div id="top"><span>🥇 <b>XAU/USD</b> <span id="px">—</span></span><span>Saldo paper: <b id="bal">—</b></span><span id="st" class="pill">a carregar…</span><span id="upd" style="color:#7b8496"></span><a href="./">← Dashboard</a></div>
+<div id="wrap"><canvas id="c" width="320" height="200"></canvas></div>
+<div id="foot">Escritório animado do desk (PAPER, só leitura). Dados: state.json do motor, branch <code>data</code>, atualiza a cada 20 s. Hora de Lisboa.</div>
+<script>
+'use strict';
+const OWNER='Vazolini',REPO='grokbot-xau-dashboard',BR='data',POLL=20000;
+const Q=new URLSearchParams(location.search),DEMO=Q.get('demo');
+const cv=document.getElementById('c'),g=cv.getContext('2d');const W=320,H=200;
+// ---------- dados ----------
+let S=null,mode='trabalho',lastClosedId=null,journalUntil=0,fetchedAt=0;
+async function j(u,o){const c=new AbortController(),t=setTimeout(()=>c.abort(),12000);try{const r=await fetch(u,{cache:'no-store',signal:c.signal,...o});if(!r.ok)throw new Error('HTTP '+r.status);return r}finally{clearTimeout(t)}}
+async function load(){let d=null;
+ if(Q.get('src')){try{d=await (await j(Q.get('src'))).json()}catch(e){}}
+ if(!d){try{const sha=(await (await j(`https://api.github.com/repos/${OWNER}/${REPO}/commits/${BR}`,{headers:{Accept:'application/vnd.github.sha'}})).text()).trim();d=await (await j(`https://raw.githubusercontent.com/${OWNER}/${REPO}/${sha}/state.json`)).json()}catch(e){}}
+ if(!d){try{d=await (await j(`https://raw.githubusercontent.com/${OWNER}/${REPO}/${BR}/state.json?t=${Date.now()}`)).json()}catch(e){}}
+ if(!d&&DEMO)d={bal:10000,price:4113.4,open:[],closed:[],signals:[],agents:{}};
+ if(d){if(DEMO)demo(d);S=d;fetchedAt=Date.now();derive()}else{setSt('sem dados','bad')}}
+function demo(d){const n=Date.now();
+ if(DEMO==='sinal')d.signals=[{setup:'PULLBACK_EMA',side:'LONG',status:'A AGUARDAR 5m'}];
+ if(DEMO==='aberto')d.open=[{id:7,side:'LONG',entry:4110.2,sl:4104.5,tp:4121.6}];
+ if(DEMO==='fechado')d.closed=[{id:9,r:1.85,pnl:92.5,closedAt:n-30000}];
+ if(DEMO==='pausa')d.revisao=true;}
+const f2=x=>(+x).toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2});
+function setSt(t,c){const e=document.getElementById('st');e.textContent=t;e.className='pill '+(c||'')}
+function derive(){const d=S;
+ document.getElementById('px').textContent=d.price?f2(d.price):'—';
+ document.getElementById('bal').textContent=d.bal!=null?f2(d.bal)+' $':'—';
+ const up=d.updatedAt?new Date(d.updatedAt):null;
+ document.getElementById('upd').textContent=up?'atualizado '+up.toLocaleTimeString('pt-PT',{timeZone:'Europe/Lisbon',hour:'2-digit',minute:'2-digit'}):'';
+ const pause=d.cb||d.revisao||d.dayStop;const open=(d.open||[]).length;const c0=(d.closed||[])[0];
+ const sig=(d.signals||[]).length>0;
+ if(c0&&c0.closedAt&&Date.now()-c0.closedAt<15*60e3&&c0.id!==undefined){if(c0.id!==lastClosedId){lastClosedId=c0.id}journalUntil=c0.closedAt+15*60e3}
+ const jr=Date.now()<journalUntil;
+ mode=pause?'pausa':open?'aberto':jr?'fechado':sig?'reuniao':'trabalho';
+ const lbl={pausa:['PAUSA — '+(d.cb?'circuit breaker':d.revisao?'revisão obrigatória':'stop diário'),'bad'],aberto:['Trade aberto ('+open+')','warn'],fechado:['Trade fechado','ok'],reuniao:['Ronda / sinal em análise','warn'],trabalho:['Sem sinal — a trabalhar','ok']}[mode];
+ setSt(lbl[0],lbl[1]);plan()}
+// ---------- cena ----------
+const DESKS=[{n:'CHIEF-XAU',x:150,y:52,shirt:'#c0392b',hair:'#2b1b0e'},{n:'TECNICA',x:46,y:92,shirt:'#2e86de',hair:'#e0b04a'},{n:'MACRO',x:46,y:152,shirt:'#27ae60',hair:'#5a3a22'},{n:'RISK-XAU',x:254,y:92,shirt:'#e67e22',hair:'#111'},{n:'JOURNAL-XAU',x:254,y:152,shirt:'#8e44ad',hair:'#9b5d2e'}];
+const TABLE={x:160,y:132};const SEATS=[[160,108],[132,124],[132,146],[188,124],[188,146]];
+const A=DESKS.map((d,i)=>({...d,i,px:d.x,py:d.y+14,tx:d.x,ty:d.y+14,face:-1,bub:'',bubT:0,blink:Math.random()*4,ph:Math.random()*6}));
+function say(a,t,ms){a.bub=t;a.bubT=performance.now()+(ms||8000)}
+function plan(){const d=S||{};const ag=d.agents||{};
+ A.forEach((a,i)=>{const home=[a.x,a.y+14];let t=home;
+  if(mode==='reuniao')t=SEATS[i];
+  a.tx=t[0];a.ty=t[1];});
+ const now=performance.now();A.forEach(a=>{a.bub='';});
+ if(mode==='reuniao'){const s=d.signals[0]||{};say(A[0],'Sinal '+(s.side||'')+' '+(s.setup||'')+'?',1e9);say(A[1],'Técnica confirma…',1e9)}
+ else if(mode==='aberto'){const p=d.open[0];say(A[3],`${p.side} @${f2(p.entry)} SL ${f2(p.sl)} TP ${f2(p.tp)}`,1e9)}
+ else if(mode==='fechado'){const c=d.closed[0];say(A[4],`Fechado: ${c.r>=0?'+':''}${(+c.r).toFixed(2)}R`,1e9)}
+ else if(mode==='pausa'){say(A[0],'PAUSA. Sem novas entradas.',1e9)}
+}
+// sprites por código
+function R(x,y,w,h,c){g.fillStyle=c;g.fillRect(x|0,y|0,w,h)}
+function lisbonHour(){const p=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Lisbon',hour:'numeric',minute:'numeric',hour12:false}).formatToParts(new Date());return +p.find(x=>x.type==='hour').value%24+ +p.find(x=>x.type==='minute').value/60}
+function floor(){for(let y=24;y<H;y+=10)for(let x=0;x<W;x+=10)R(x,y,10,10,((x+y)/10)%2?'#3b3326':'#43392b');
+ R(0,0,W,24,'#2a3140');R(0,22,W,3,'#1a1f29');
+ const h=Q.get('hora')?+Q.get('hora'):lisbonHour();const day=h>=7.5&&h<19.5,dusk=(h>=6.5&&h<7.5)||(h>=19.5&&h<20.5);
+ const sky=day?'#7ec8f0':dusk?'#f08a5d':'#14193a';
+ [[20,4],[70,4],[220,4],[270,4]].forEach(([x,y])=>{R(x,y,32,14,'#555e70');R(x+2,y+2,28,10,sky);if(!day&&!dusk){R(x+6,y+4,1,1,'#fff');R(x+20,y+7,1,1,'#fff')}R(x+15,y+2,2,10,'#555e70')});
+ if(day)R(26,8,4,3,'#fff9c4');
+ // placard/relógio
+ R(126,3,68,16,'#111');g.fillStyle=mode==='pausa'?'#ff4d4d':'#ffd166';g.font='8px monospace';g.textAlign='center';g.fillText(mode==='pausa'?'PAUSA':(S&&S.price?'XAU '+(+S.price).toFixed(2):'XAU'),160,14);
+ // plantas
+ [[6,30],[306,30],[6,186],[306,186]].forEach(([x,y])=>{R(x,y+6,8,6,'#8d5524');R(x-1,y,10,7,'#2d8a3e');R(x+2,y-3,4,4,'#3fae55')});
+ return {day,dusk}}
+function desk(a,t){const x=a.x,y=a.y;R(x-18,y-2,36,14,'#7a5230');R(x-18,y+10,36,2,'#5a3a20');
+ R(x-8,y-12,16,11,'#222');const on=(t/400+a.i)%1;R(x-7,y-11,14,8,mode==='pausa'?'#5a1010':'#0e2a3a');
+ // gráfico no monitor
+ for(let k=0;k<6;k++){const hh=2+((Math.sin(t/700+k+a.i)+1)*2)|0;R(x-6+k*2,y-4-hh,1,hh,k%2?'#26a69a':'#ef5350')}
+ R(x-1,y-1,2,2,'#333');R(x-6,y+3,12,3,'#ccc');R(x+9,y+2,3,4,'#eee');}
+function chair(x,y){R(x-5,y+2,10,4,'#333');R(x-4,y+6,8,2,'#222')}
+function table(){R(TABLE.x-24,TABLE.y-16,48,32,'#6d4c2f');R(TABLE.x-22,TABLE.y-14,44,28,'#8a6240');R(TABLE.x-6,TABLE.y-4,12,8,'#ddd');}
+function person(a,t){const x=Math.round(a.px),y=Math.round(a.py);const moving=Math.hypot(a.tx-a.px,a.ty-a.py)>0.6;
+ const br=moving?0:Math.round(Math.sin(t/600+a.ph)*0.6);const step=moving?((t/120|0)%2):0;
+ // sombra
+ g.globalAlpha=.3;R(x-4,y+6,8,2,'#000');g.globalAlpha=1;
+ // pernas
+ R(x-3,y+2,2,4+(step?1:0),'#2c3e50');R(x+1,y+2,2,4+(step?0:1),'#2c3e50');
+ // corpo
+ R(x-4,y-5+br,8,8,a.shirt);
+ // braços (digitar)
+ const typing=!moving&&atHome(a)&&mode!=='pausa';const ty=typing?((t/150+a.i)|0)%2:0;
+ R(x-5,y-4+br+ty,2,5,a.shirt);R(x+3,y-4+br+(1-ty)*(typing?1:0),2,5,a.shirt);
+ // cabeça
+ R(x-3,y-11+br,6,6,'#f1c27d');R(x-3,y-12+br,6,2,a.hair);
+ const bl=((t/1000+a.blink)%4)<0.12;if(!bl){R(x-2,y-9+br,1,1,'#111');R(x+1,y-9+br,1,1,'#111')}
+ // nome
+ g.font='6px monospace';g.textAlign='center';const w=g.measureText(a.n).width+4;
+ g.globalAlpha=.75;R(x-w/2,y-21,w,8,'#000');g.globalAlpha=1;g.fillStyle='#ffd166';g.fillText(a.n,x,y-15);
+ if(a.bub&&performance.now()<a.bubT)bubble(x,y-23,a.bub);}
+function atHome(a){return Math.hypot(a.px-a.x,a.py-a.y-14)<1}
+function bubble(x,y,t){g.font='6px monospace';const w=Math.min(150,g.measureText(t).width+6);let bx=Math.max(2,Math.min(W-w-2,x-w/2));
+ R(bx,y-11,w,10,'#fff');R(bx-1,y-10,w+2,8,'#fff');R(x-1,y-1,3,2,'#fff');g.fillStyle='#111';g.textAlign='left';g.fillText(t,bx+3,y-4,w-6)}
+function lamp(t){if(mode!=='pausa')return;const on=(t/500|0)%2;R(300,4,12,12,'#333');R(302,6,8,8,on?'#ff2a2a':'#5a0f0f');if(on){g.globalAlpha=.10;R(0,0,W,H,'#ff0000');g.globalAlpha=1}}
+let last=performance.now();
+function frame(t){const dt=Math.min(50,t-last);last=t;
+ const L=floor();table();DESKS.forEach(d=>chair(d.x,d.y+16));
+ // ordenar por y
+ const items=[...DESKS.map(d=>({y:d.y,f:()=>desk(d,t)})),...A.map(a=>({y:a.py+1,f:()=>person(a,t)}))].sort((p,q)=>p.y-q.y);
+ A.forEach(a=>{const dx=a.tx-a.px,dy=a.ty-a.py,dd=Math.hypot(dx,dy);if(dd>0.6){const s=Math.min(dd,dt*0.03);a.px+=dx/dd*s;a.py+=dy/dd*s}else{a.px=a.tx;a.py=a.ty}});
+ items.forEach(i=>i.f());
+ if(!L.day){g.globalAlpha=L.dusk?.12:.28;R(0,0,W,H,'#0a1040');g.globalAlpha=1;
+  // candeeiros nas mesas à noite
+  g.globalAlpha=.12;DESKS.forEach(d=>{g.fillStyle='#ffe9a0';g.beginPath();g.arc(d.x,d.y,22,0,7);g.fill()});g.globalAlpha=1}
+ lamp(t);
+ if(S&&S.updatedAt&&Date.now()-new Date(S.updatedAt)>5*60e3&&!DEMO){g.font='7px monospace';g.textAlign='center';g.fillStyle='#ffb347';g.fillText('dados atrasados',160,196)}
+ requestAnimationFrame(frame)}
+// idle: frases curtas aleatórias das mesas
+setInterval(()=>{if(mode!=='trabalho'||!S)return;const a=A[Math.random()*5|0];const ag=(S.agents||{})[a.n];
+ let m=ag&&ag.last?ag.last:'…';if(m.length>34)m=m.slice(0,33)+'…';say(a,m,5000)},4500);
+requestAnimationFrame(frame);load();setInterval(load,POLL);setInterval(()=>S&&derive(),30000);
+</script></body></html>
