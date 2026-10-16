@@ -1,0 +1,52 @@
+{
+ "broker": "Pepperstone",
+ "server": "PepperstoneUK-Demo",
+ "demo": true,
+ "currency": "USD",
+ "balance": 9999.7,
+ "equity": 9999.7,
+ "margin_free": 9999.7,
+ "mirrorEnabled": true,
+ "killSwitch": {
+  "tripped": false,
+  "reason": null,
+  "day_pnl": 0.0,
+  "cum_pnl": 0.0,
+  "day_R": 0.0,
+  "cum_R": 0.0,
+  "R": 100.0
+ },
+ "macroBlock": "macroStale=true",
+ "mirrorError": null,
+ "mirrorAt": "2026-10-16T02:15:32",
+ "positions": [],
+ "deals": [
+  {
+   "ticket": 63447359,
+   "position": 94961883,
+   "time": "2026-10-15T02:12:59Z",
+   "symbol": "XAUUSD",
+   "side": "BUY",
+   "entry": "in",
+   "lots": 0.01,
+   "price": 4145.03,
+   "profit": 0.0,
+   "commission": -0.04,
+   "swap": 0.0
+  },
+  {
+   "ticket": 63447366,
+   "position": 94961883,
+   "time": "2026-10-15T02:13:01Z",
+   "symbol": "XAUUSD",
+   "side": "SELL",
+   "entry": "out",
+   "lots": 0.01,
+   "price": 4144.81,
+   "profit": -0.22,
+   "commission": -0.04,
+   "swap": 0.0
+  }
+ ],
+ "updatedAt": "2026-10-16T01:15:40Z"
+}
