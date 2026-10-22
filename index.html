@@ -24,29 +24,45 @@ small{color:var(--mut)}.past{opacity:.45}.now{background:rgba(255,59,92,.15)}::-
 .alert{display:none;background:var(--r);color:#fff;padding:6px;text-align:center;font-weight:900;border-radius:6px;margin-bottom:6px}
 .sig{font-size:11px;color:var(--mut);padding:6px 14px;border-bottom:1px solid #2e1a00}.sig b{color:var(--orange)}
 #eq{flex:1;min-height:160px}
-#lay{display:grid;gap:8px;padding:8px;grid-template-columns:1fr}
-@media(min-width:1000px){
- #lay{grid-template-columns:clamp(260px,22vw,360px) minmax(0,1fr);grid-template-areas:"acc pos" "pnl hist" "cal hist";grid-template-rows:auto auto 1fr}
- #acc{grid-area:acc}#pnl{grid-area:pnl}#cal{grid-area:cal}#posC{grid-area:pos}#hist{grid-area:hist}
- #posC .tw{max-height:32vh}#hist{min-height:52vh}
-}
-@media(max-width:999px){.tw{max-height:360px}#eq{height:220px;flex:none}}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle}
 .dot.on{background:var(--g);box-shadow:0 0 8px var(--g);animation:pl 1.5s infinite}.dot.off{background:var(--r);box-shadow:0 0 8px var(--r)}
-#offW{padding:0 8px 8px}#offC h2{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-#agents{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:8px;flex:none}
+.agcol{display:flex;flex-direction:column;gap:6px;min-height:0}
 .agent{position:relative;border:1px solid #5a3a10;border-top:3px solid var(--c,#d8b25a);border-radius:8px;padding:5px 8px;background:linear-gradient(180deg,#121a2b,#0a0f1a);transition:.3s;min-width:0;overflow:hidden}
 .agent.flash{border-color:var(--y);box-shadow:0 0 16px rgba(255,210,63,.6)}
-.agent b{color:var(--c,#ffd23f);font-size:12px;letter-spacing:1px}.agent .st{float:right;font-size:9px}.agent .la{font-size:11px;color:#d9c7a8;margin-top:3px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.6em}
-#hero{position:relative;border-radius:12px;padding:3px;background:linear-gradient(135deg,#8a6a22,#f1d27a,#c9a24a,#8a6a22);box-shadow:0 0 24px rgba(216,178,90,.35);height:clamp(300px,calc((100vw - 40px)*.5625),82vh)}
+.agent b{color:var(--c,#ffd23f);font-size:12px;letter-spacing:1px}.agent .st{float:right;font-size:9px}.agent .la{font-size:11px;color:#d9c7a8;margin-top:3px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#hero{position:relative;border-radius:12px;padding:3px;background:linear-gradient(135deg,#8a6a22,#f1d27a,#c9a24a,#8a6a22);box-shadow:0 0 24px rgba(216,178,90,.35);min-width:0;min-height:0}
 #oc{display:block;width:100%;height:100%;border-radius:9px;background:#0b1426;touch-action:manipulation}
-@media(max-width:999px){#agents{grid-template-columns:repeat(2,1fr)}}
+#ostC .opill{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+/* telemóvel / janelas baixas: empilhado, com scroll normal */
+#lay{display:flex;flex-direction:column;gap:8px;padding:8px}#colL,#colR,#bot{display:flex;flex-direction:column;gap:8px}
+@media(max-width:999px),(max-height:559px){#hero{aspect-ratio:16/9;order:-1}.tw{max-height:340px}#eq{height:220px;flex:none}}
+/* desktop = um ecrã só (como o desk memecoin): escritório ao centro, painéis MT5 à volta, listas com scroll dentro do painel */
+@media(min-width:1000px) and (min-height:560px){
+ html,body{height:100%;overflow:hidden}
+ body{display:flex;flex-direction:column;height:100vh}
+ .banner,header,.sig{flex:none}
+ .sig{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:3px 14px}
+ #lay{flex:1;min-height:0;display:grid;gap:6px;padding:6px 8px 8px;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);grid-template-rows:minmax(0,1fr) clamp(180px,30vh,380px);grid-template-areas:"cl of cr" "bt bt bt"}
+ #colL{grid-area:cl}#colR{grid-area:cr}#colL,#colR{gap:6px;min-height:0;min-width:0}
+ #hero{grid-area:of;height:100%;aspect-ratio:16/9;max-width:calc(100vw - 2*clamp(250px,18vw,440px) - 32px);justify-self:center}
+ #bot{grid-area:bt;display:grid;grid-template-columns:1.15fr 1.5fr .85fr;gap:6px;min-height:0}
+ #colL>.card,#colR>.card{flex:none}#colL>.agcol,#colR>.agcol{flex:1}.agcol .agent{flex:1;min-height:0}
+ #colR>#cal{flex:1;min-height:0}#ostC small{font-size:9px}
+ .tw{flex:1;min-height:0;overflow:auto}#eq{min-height:0}
+}
+@media(min-width:1000px) and (min-height:560px) and (max-height:900px){
+ .logo{font-size:17px}header{padding:2px 12px}.banner{padding:1px;font-size:10px}.sig{font-size:10px;padding:2px 14px}
+ .card{padding:5px 8px}h2{margin-bottom:3px;font-size:11px}.stats{gap:2px 8px}.stat .v{font-size:13px}.stat .l{font-size:9px}
+ .agent{padding:2px 7px}.agent .la{font-size:10px;margin-top:1px;line-height:1.2}.agent b{line-height:1.2}td{white-space:nowrap}.agent b{font-size:11px}table{font-size:10px}td,th{padding:2px 3px}
+ #acc small,#pnl small{font-size:9px}.tabbar button{padding:2px 7px;font-size:10px}.opill,.src,.demo{font-size:10px;padding:2px 6px}
+}
 </style></head><body>
 <div class="banner">CONTA DEMO MT5 · PEPPERSTONE — SEM DINHEIRO REAL — SÓ RESULTADOS DA CONTA DEMO</div>
 <header><div class="logo">GROKBOT <span>+</span> JEV — <em>XAU/USD</em></div>
 <div><span id="dbadge" class="demo">DEMO</span> <span id="mir" class="opill">MIRROR —</span> <span id="src" class="src off">A LIGAR…</span> <small id="upd"></small></div></header>
 <div class="sig" id="sig">Último sinal do motor (sinal, não é resultado): —</div>
 <div id="lay">
+<div id="colL">
 <section class="card" id="acc"><h2>Conta Demo MT5</h2><div class="alert" id="al"></div>
 <div class="stats">
 <div class="stat"><div class="l">CORRETORA / SERVIDOR</div><div class="v" id="srv" style="font-size:12px;color:var(--y)">—</div></div>
@@ -64,17 +80,23 @@ small{color:var(--mut)}.past{opacity:.45}.now{background:rgba(255,59,92,.15)}::-
 <div class="stat"><div class="l">TRADES FECHADOS</div><div class="v" id="nc" style="color:var(--orange2)">—</div></div>
 <div class="stat"><div class="l">TAXA DE ACERTO</div><div class="v" id="wr" style="color:var(--y)">—</div></div>
 </div><small id="pnlNote" style="margin-top:6px">Líquido = lucro + comissão + swap.</small></section>
+<div class="agcol" id="agL"></div>
+</div>
+<section id="hero"><canvas id="oc" aria-label="Escritório animado do desk XAU (dados da conta demo MT5)"></canvas></section>
+<div id="colR">
+<section class="card" id="ostC"><h2>Escritório · estado</h2><span id="ost" class="opill">a carregar…</span><small style="margin-top:3px">No escritório: saldo, equity, posições e P&amp;L = conta DEMO MT5. Velas/sinais: motor.</small></section>
+<div class="agcol" id="agR"></div>
 <section class="card" id="cal"><h2>Calendário Macro (USD)</h2><div class="tw"><table><thead><tr><th>HORA (LISBOA)</th><th>IMP.</th><th>EVENTO</th></tr></thead><tbody id="calb"></tbody></table></div></section>
+</div>
+<div id="bot">
 <section class="card" id="posC"><h2>Posições Abertas (MT5 demo) <small id="npos"></small></h2><div class="tw"><table><thead><tr><th>TICKET</th><th>ABERTA</th><th>LADO</th><th>LOTES</th><th>ENTRADA</th><th>SL</th><th>TP</th><th>ATUAL</th><th>P&amp;L</th></tr></thead><tbody id="posb"></tbody></table></div></section>
-<section class="card" id="hist"><div class="tabbar"><button data-p="ptr" class="act">HISTÓRICO DE TRADES</button><button data-p="pdl">DEALS</button><button data-p="pcv">CURVA P&amp;L</button></div>
+<section class="card" id="hist"><div class="tabbar"><button data-p="ptr" class="act">HISTÓRICO DE TRADES</button><button data-p="pdl">DEALS</button></div>
 <div class="pane act" id="ptr"><div class="tw"><table><thead><tr><th>POSIÇÃO</th><th>LADO</th><th>LOTES</th><th>ABERTURA</th><th>ENTRADA</th><th>FECHO</th><th>SAÍDA</th><th>BRUTO</th><th>COM.+SWAP</th><th>LÍQUIDO</th><th>ESTADO</th></tr></thead><tbody id="trb"></tbody></table></div></div>
 <div class="pane" id="pdl"><div class="tw"><table><thead><tr><th>HORA (LISBOA)</th><th>DEAL</th><th>POS.</th><th>LADO</th><th>IN/OUT</th><th>LOTES</th><th>PREÇO</th><th>LUCRO</th><th>COM.</th><th>SWAP</th></tr></thead><tbody id="dlb"></tbody></table></div></div>
-<div class="pane" id="pcv"><h2 style="flex:none">P&amp;L realizado acumulado (líquido, USD)</h2><div id="eq"></div></div>
-<small style="flex:none;margin-top:6px">Fonte: conta DEMO Pepperstone MT5 (demo.json publicado pelo PC ~60s). Horas: Lisboa. Sem resultados paper/simulação neste painel.</small></section>
+<small style="flex:none;margin-top:6px">Fonte: conta DEMO Pepperstone MT5 (demo.json publicado pelo PC ~60s). Horas: Lisboa. Sem paper/simulação.</small></section>
+<section class="card" id="cvC"><h2 style="flex:none">Curva P&amp;L realizado (líquido, USD)</h2><div id="eq"></div></section>
 </div>
-<div id="offW"><section class="card" id="offC"><h2>Escritório dos Agentes <span id="ost" class="opill">a carregar…</span> <small style="letter-spacing:0;text-transform:none">Saldo, equity, posições e P&amp;L mostrados no escritório = conta DEMO MT5 (Pepperstone). Velas/sinais: motor.</small></h2>
-<div id="agents"></div>
-<section id="hero"><canvas id="oc" aria-label="Escritório animado do desk XAU (dados da conta demo MT5)"></canvas></section></section></div>
+</div>
 <script>document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.tabbar button');if(!b)return;const c=b.closest('.card');c.querySelectorAll('.tabbar button').forEach(x=>x.classList.toggle('act',x===b));c.querySelectorAll('.pane').forEach(p=>p.classList.toggle('act',p.id===b.dataset.p));window.dispatchEvent(new Event('resize'))});</script>
 <script>/*!
  * @license
@@ -322,7 +344,8 @@ function render(){const d=D;const ccy=d.currency||'USD';document.querySelectorAl
  document.title=`DEMO MT5 ${fmt(d.equity,0)} · XAU/USD`;}
 // faixa de agentes do escritório (RISK/JOURNAL = conta demo; restantes = motor, sem mensagens de estudo/paper)
 const AG=['CHIEF-XAU','TECNICA','MACRO','RISK-XAU','JOURNAL-XAU'],AGC={'CHIEF-XAU':'#ef4444','TECNICA':'#3b82f6','MACRO':'#22c55e','RISK-XAU':'#f97316','JOURNAL-XAU':'#ec4899'};
-$('agents').innerHTML=AG.map(n=>`<div class="agent" id="ag-${n}" style="--c:${AGC[n]}"><b>${n}</b><span class="st"><span class="dot on"></span><span class="sx">ONLINE</span></span><div class="la">A carregar…</div></div>`).join('')+`<div class="agent" id="ag-E" style="--c:#d8b25a"><b>E · ENGINE</b><span class="st"><span class="dot on"></span><span class="sx">ONLINE</span></span><div class="la">A ligar ao motor…</div></div>`;
+{const card=n=>`<div class="agent" id="ag-${n}" style="--c:${AGC[n]}"><b>${n}</b><span class="st"><span class="dot on"></span><span class="sx">ONLINE</span></span><div class="la">A carregar…</div></div>`;
+ $('agL').innerHTML=['CHIEF-XAU','TECNICA','MACRO'].map(card).join('');$('agR').innerHTML=['RISK-XAU','JOURNAL-XAU'].map(card).join('')+`<div class="agent" id="ag-E" style="--c:#d8b25a"><b>E · ENGINE</b><span class="st"><span class="dot on"></span><span class="sx">ONLINE</span></span><div class="la">A ligar ao motor…</div></div>`;}
 const agoMs=ms=>isNaN(ms)?'':' · há '+ago(Math.max(0,Math.round((Date.now()-ms)/1000)));
 function agents(){if(!window.OFFICE)return;AG.forEach(n=>{const el=$('ag-'+n),la=el.querySelector('.la'),m=OFFICE.agentMsg(n);if(la.dataset.m!==m.t){if(la.dataset.m){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),900);}la.dataset.m=m.t;}la.textContent=m.t+agoMs(+m.at);});}
 function agStatus(){const u=S&&S.updatedAt?Date.parse(S.updatedAt):NaN,st=isNaN(u)||Date.now()-u>11*60e3;
